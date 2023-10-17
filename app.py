@@ -30,6 +30,9 @@ def create_persons():
     surname = body['surname']
     dni = body['dni']
     email = body['email']
+
+    cur = mysql.connect.cursor()
+    cur.execute('INTo To person (name, surname, dni, email) VALUES (%s, %s, %s, %s)', (name, surname, dni, email))
     
     return jsonify({'data':'creada','name':name, 'surname': surname, 'dni': dni, 'email': email })
 
