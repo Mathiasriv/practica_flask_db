@@ -28,12 +28,14 @@ def create_persons():
     body = request.get_json()
     name = body['name']
     surname = body['surname']
+    
     dni = body['dni']
     email = body['email']
 
     cur = mysql.connect.cursor()
     cur.execute('INTo To person (name, surname, dni, email) VALUES (%s, %s, %s, %s)', (name, surname, dni, email))
-    
+    mysql.connection.commit()    
+
     return jsonify({'data':'creada','name':name, 'surname': surname, 'dni': dni, 'email': email })
 
 @app.route('/persons/<int:id>', methods = ['GET'])
