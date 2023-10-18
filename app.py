@@ -28,15 +28,21 @@ def create_persons():
     body = request.get_json()
     name = body['name']
     surname = body['surname']
-    
+
     dni = body['dni']
     email = body['email']
 
     cur = mysql.connect.cursor()
-    cur.execute('INTo To person (name, surname, dni, email) VALUES (%s, %s, %s, %s)', (name, surname, dni, email))
+    cur.execute('INSERT INTO person (name, surname, dni, email) VALUES (%s, %s, %s, %s)', (name, surname, dni, email))
     mysql.connection.commit()    
 
-    return jsonify({'data':'creada','name':name, 'surname': surname, 'dni': dni, 'email': email })
+    # obtener el id del registro creado
+
+    cur.execute('SELECT LAST_INSERT_ID()')
+    row =cur.fetchone()
+    print(row) 
+
+    return jsonify({'data':'creada','name':name, 'surname': surname, 'dni': dni, 'email': email, 'id': 100 })
 
 @app.route('/persons/<int:id>', methods = ['GET'])
 def get_persons_by_id(id):
