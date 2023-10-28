@@ -1,10 +1,13 @@
 from flask import Flask, jsonify, request
 from flask_mysqldb import MySQL
 from person import Person
+from functools import wraps
 import jwt
+import datetime
+
 app = Flask(__name__)
 
-app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_HOST'] = '127.0.0.1'
 app.config['MYSQL_USER'] = 'app_flask_db'
 app.config['MYSQL_PASSWORD'] ='1234'
 app.config['MYSQL_DB'] = 'db_flask_1'
@@ -16,8 +19,48 @@ mysql = MySQL(app)
 
 @app.route('/login', methods = ['POST'])
 def login():
-    return jsonify({'index'})
+    auth = request.authorization
+    print(auth)
+    if not auth or not auth.username or not auth.password:
+        return jsonify({'message': 'no autorizado'}), 401
+    
+    curl = mysql.connection.cursor()
+    curl.execute('SELECT * FROM users WHERE username = %s AND password = %s', (auth.username, auth.password))
+    row = curl.fetchone()
 
+    if not row:
+        return jsonify({'message': 'no autorizado'}), 401
+
+    token = jwt.encode({'id': row[0],
+                        'exp': datetime.datetime.utcnow()+ datetime.timedelta(minutes= 5)}, app.config['SECRET_KEY'])
+    return jsonify({'token':token, 'username': auth.username })
+
+def token_required(func):
+    @wraps(func)
+    def decored(*args, **kwargs):
+        print(*args)
+        token = None
+        if 'x-access-token' in request.headers:
+            token = request.headers['x-access-token']
+
+        if not token:
+            return jsonify({'message':'falta el token'}), 401
+        
+        try:
+            data = jwt.decode(token, app.config['SECRET-KEY'], algorithm= ["HS256"])
+            exp = data['exp']
+        except Exception as e:
+            print(e)
+            return jsonify({'message': str(e)}), 401
+
+        return func(*args, **kwargs)
+
+    return decored
+
+@app.route('/test/<int:id>', methods = ['GET'] )
+@token_required
+def test(id):
+    return jsonify({'message':'funcion test'})
 
 
 @app.route('/persons', methods = ['GET'])
@@ -80,7 +123,7 @@ def update(id):
     dni = body['dni']
     email = body['email']
     cur = mysql.connection.cursor()
-    cur.execute('UPDATE person SET name = %s, surname = %s, dni = %s,  email = %s, where id = %s' (name, surname, dni, email, id))
+    cur.execute('UPDATE person SET name = %s, surname = %s, dni = %s,  email = %s, where id = %s', (name, surname, dni, email, id))
     mysql.connection.commit()
     return jsonify({'id':id,'name':name, 'surname': surname, 'dni': dni, 'email': email })
 
@@ -92,4 +135,5 @@ def delete(id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=4500)
+    app.run(debug=True, port=4500) #4500
+
