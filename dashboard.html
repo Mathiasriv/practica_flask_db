@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+  <h1>Bienvenido <span id="username"></span></h1>  
+  <button onclick="cargarClientes()"> Cargar clientes</button>
+</body>
+
+
+<script>
+
+ window.onload = function() {
+    const token = localStorage.getItem('token');
+    if(token){
+        const username = localStorage.getItem('username');
+        
+        document.getElementById("username").innerHTML = username;
+    }
+    else{
+        window.location.href = "login.html";
+    }
+    
+ }
+
+function cargarClientes() {
+    const id = localStorage.getItem('id');
+    const token = localStorage.getItem('token')
+
+    const requestOptions = {
+    method : 'GET',
+    headers:{
+        'Content-Type': 'application/json',
+        'x-access-token': token,
+        'user-id': id
+    }
+}
+   fetch(`http://127.0.0.1:4500/user/${id}/client`, requestOptions).then(
+    resp => {return resp.json()}
+   ).then(
+    resp => {console.log(resp)
+    
+    
+            resp.forEach(cliente=> {
+                mostrarClientes(cliente);
+                
+            });
+    
+    }
+
+   )
+}
+
+function mostrarClientes(cliente) {
+   console.log(cliente.name) 
+}
+
+
+</script>
+</html>

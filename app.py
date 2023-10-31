@@ -5,8 +5,10 @@ from client import Client
 import jwt
 import datetime
 from functools import wraps
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app) # habilita las consultas externas ej navegador
 
 app.config['MYSQL_HOST'] = '127.0.0.1'
 app.config['MYSQL_USER'] = 'app_flask_db'
